@@ -57,7 +57,7 @@ func init() {
 		"The specified value is set as a hexadecimal.\n", nil)
 
 	flag.BoolVar(&options.verbose, "verbose", 'V', false,
-		"Output with the details.\n", nil)
+		"Output with details.\n", nil)
 
 	flag.Bool("control", 'c', false, "Output the Control character in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Control, callback)
