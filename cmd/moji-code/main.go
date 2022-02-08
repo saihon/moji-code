@@ -9,7 +9,7 @@ import (
 
 const (
 	Name    = "moji-code"
-	Version = "v2.0"
+	Version = "v2.1"
 	Format  = "%7d %U %-11s %s\n"
 )
 
@@ -59,15 +59,15 @@ func init() {
 	flag.BoolVar(&options.verbose, "verbose", 'V', false,
 		"Output with details.\n", nil)
 
-	flag.Bool("control", 'c', false, "Output the Control character in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("control", 'c', false, "Output the Control character in the ASCII.\n", func(_ flag.Getter) error {
 		Each(ASCII.Control, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("number", 'n', false, "Output the Numbers.\n", func(_ flag.Getter) error {
+	flag.Bool("number", 'n', false, "Output the Number in the ASCII.\n", func(_ flag.Getter) error {
 		Each(ASCII.Number, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("symbol", 's', false, "Output the Symbolic character in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("symbol", 's', false, "Output the Symbolic character in the ASCII.\n", func(_ flag.Getter) error {
 		Each(ASCII.Symbol, callback)
 		return flag.ErrHelp
 	})

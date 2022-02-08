@@ -109,14 +109,14 @@ var (
 	}
 )
 
-type Inspector struct {
+type Categorizer struct {
 	s string
 	f func(rune) bool
 	t *unicode.RangeTable
 }
 
 var (
-	Inspectors = []Inspector{
+	categorizer = []Categorizer{
 		{s: "Control", f: unicode.IsControl},
 		{s: "Space", f: unicode.IsSpace},
 		{s: "Graphic", f: unicode.IsGraphic},
@@ -327,7 +327,7 @@ var (
 
 func categorize(r rune) string {
 	var a []string
-	for _, v := range Inspectors {
+	for _, v := range categorizer {
 		if v.f != nil && v.f(r) {
 			a = append(a, v.s)
 		}
@@ -382,6 +382,9 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 	l := len(u) - 1
 	for i, j := 0, 1; i <= l; i, j = i+2, j+2 {
 		if j > l {
+			if u[i] > unicode.MaxRune {
+				return nil, errors.New("Exceeded maximum valid Unicode code point")
+			}
 			if u[i] <= MaxR16 {
 				r16 := unicode.Range16{Lo: uint16(u[i]), Hi: uint16(u[i]), Stride: 1}
 				t.R16 = append(t.R16, r16)
@@ -390,6 +393,10 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 				t.R32 = append(t.R32, r32)
 			}
 			continue
+		}
+
+		if u[i] > unicode.MaxRune || u[j] > unicode.MaxRune {
+			return nil, errors.New("Exceeded maximum valid Unicode code point")
 		}
 
 		if u[i] <= MaxR16 && u[j] <= MaxR16 {
