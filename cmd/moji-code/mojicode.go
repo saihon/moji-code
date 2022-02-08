@@ -325,7 +325,7 @@ var (
 	}
 )
 
-func classify(r rune) string {
+func categorize(r rune) string {
 	var a []string
 	for _, v := range Inspectors {
 		if v.f != nil && v.f(r) {
@@ -347,12 +347,12 @@ func toEntity(r rune) Entity {
 	}
 	if r <= unicode.MaxASCII {
 		if entity, ok := ASCII.ControlDetails[uint16(r)]; ok {
-			entity.Detail = classify(r) + " " + entity.Detail
+			entity.Detail = categorize(r) + " " + entity.Detail
 			return entity
 		}
 	}
 
-	e.Detail = classify(r)
+	e.Detail = categorize(r)
 	return e
 }
 
