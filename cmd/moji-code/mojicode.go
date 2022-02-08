@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -31,15 +32,18 @@ var (
 			R16: []unicode.Range16{
 				{0x0000, 0x007F, 1},
 			},
+			LatinOffset: 1,
 		},
 		Control: &unicode.RangeTable{
 			R16: []unicode.Range16{
 				{0x0000, 0x0020, 1},
 				{0x007F, 0x007F, 1},
 			},
+			LatinOffset: 2,
 		},
 		Number: &unicode.RangeTable{
-			R16: []unicode.Range16{{0x0030, 0x0039, 1}},
+			R16:         []unicode.Range16{{0x0030, 0x0039, 1}},
+			LatinOffset: 1,
 		},
 		Symbol: &unicode.RangeTable{
 			R16: []unicode.Range16{
@@ -47,16 +51,23 @@ var (
 				{0x005B, 0x0060, 1},
 				{0x007B, 0x007E, 1},
 			},
+			LatinOffset: 1,
 		},
 		Alphabet: struct {
 			Upper *unicode.RangeTable
 			Lower *unicode.RangeTable
 		}{
 			Upper: &unicode.RangeTable{
-				R16: []unicode.Range16{{0x0041, 0x005A, 1}},
+				R16: []unicode.Range16{
+					{0x0041, 0x005A, 1},
+				},
+				LatinOffset: 1,
 			},
 			Lower: &unicode.RangeTable{
-				R16: []unicode.Range16{{0x0061, 0x007A, 1}},
+				R16: []unicode.Range16{
+					{0x0061, 0x007A, 1},
+				},
+				LatinOffset: 1,
 			},
 		},
 		ControlDetails: map[uint16]Entity{
@@ -98,37 +109,233 @@ var (
 	}
 )
 
-func inspect(r rune) string {
-	switch {
-	case unicode.IsControl(r):
-		return "Control"
-	case unicode.IsSpace(r):
-		return "Space"
-	case unicode.IsGraphic(r):
-		switch {
-		case unicode.IsSymbol(r) || unicode.IsPunct(r):
-			return "Symbol"
-		case unicode.IsDigit(r):
-			return "Digit"
-		default:
-			switch {
-			case unicode.Is(unicode.Hiragana, r):
-				return "Japanese Hiragana"
-			case unicode.Is(unicode.Katakana, r):
-				return "Japanese Katakana"
-			case unicode.Is(unicode.Han, r):
-				return "Chinese character"
-			case unicode.Is(ASCII.Alphabet.Upper, r):
-				return "Alphabet Upper-case"
-			case unicode.Is(ASCII.Alphabet.Lower, r):
-				return "Alphabet Lower-case"
-			default:
-				return ""
-			}
-		}
-	default:
-		return ""
+type Inspector struct {
+	s string
+	f func(rune) bool
+	t *unicode.RangeTable
+}
+
+var (
+	Inspectors = []Inspector{
+		{s: "Control", f: unicode.IsControl},
+		{s: "Space", f: unicode.IsSpace},
+		{s: "Graphic", f: unicode.IsGraphic},
+		{s: "Letter", f: unicode.IsLetter},
+		{s: "Title", f: unicode.IsTitle},
+		{s: "Mark", f: unicode.IsMark},
+		{s: "Symbolic", f: unicode.IsSymbol},
+		{s: "Punctuation", f: unicode.IsPunct},
+		{s: "Digit", f: unicode.IsDigit},
+
+		{s: "Adlam", t: unicode.Adlam},
+		{s: "Ahom", t: unicode.Ahom},
+		{s: "Anatolian-Hieroglyphs", t: unicode.Anatolian_Hieroglyphs},
+		{s: "Arabic", t: unicode.Arabic},
+		{s: "Armenian", t: unicode.Armenian},
+		{s: "Avestan", t: unicode.Avestan},
+		{s: "Balinese", t: unicode.Balinese},
+		{s: "Bamum", t: unicode.Bamum},
+		{s: "Bassa-Vah", t: unicode.Bassa_Vah},
+		{s: "Batak", t: unicode.Batak},
+		{s: "Bengali", t: unicode.Bengali},
+		{s: "Bhaiksuki", t: unicode.Bhaiksuki},
+		{s: "Bopomofo", t: unicode.Bopomofo},
+		{s: "Brahmi", t: unicode.Brahmi},
+		{s: "Braille", t: unicode.Braille},
+		{s: "Buginese", t: unicode.Buginese},
+		{s: "Buhid", t: unicode.Buhid},
+		{s: "Canadian-Aboriginal", t: unicode.Canadian_Aboriginal},
+		{s: "Carian", t: unicode.Carian},
+		{s: "Caucasian-Albanian", t: unicode.Caucasian_Albanian},
+		{s: "Chakma", t: unicode.Chakma},
+		{s: "Cham", t: unicode.Cham},
+		{s: "Cherokee", t: unicode.Cherokee},
+		{s: "Chorasmian", t: unicode.Chorasmian},
+		{s: "Common", t: unicode.Common},
+		{s: "Coptic", t: unicode.Coptic},
+		{s: "Cuneiform", t: unicode.Cuneiform},
+		{s: "Cypriot", t: unicode.Cypriot},
+		{s: "Cyrillic", t: unicode.Cyrillic},
+		{s: "Deseret", t: unicode.Deseret},
+		{s: "Devanagari", t: unicode.Devanagari},
+		{s: "Dives-Akuru", t: unicode.Dives_Akuru},
+		{s: "Dogra", t: unicode.Dogra},
+		{s: "Duployan", t: unicode.Duployan},
+		{s: "Egyptian-Hieroglyphs", t: unicode.Egyptian_Hieroglyphs},
+		{s: "Elbasan", t: unicode.Elbasan},
+		{s: "Elymaic", t: unicode.Elymaic},
+		{s: "Ethiopic", t: unicode.Ethiopic},
+		{s: "Georgian", t: unicode.Georgian},
+		{s: "Glagolitic", t: unicode.Glagolitic},
+		{s: "Gothic", t: unicode.Gothic},
+		{s: "Grantha", t: unicode.Grantha},
+		{s: "Greek", t: unicode.Greek},
+		{s: "Gujarati", t: unicode.Gujarati},
+		{s: "Gunjala-Gondi", t: unicode.Gunjala_Gondi},
+		{s: "Gurmukhi", t: unicode.Gurmukhi},
+		{s: "Han", t: unicode.Han},
+		{s: "Hangul", t: unicode.Hangul},
+		{s: "Hanifi-Rohingya", t: unicode.Hanifi_Rohingya},
+		{s: "Hanunoo", t: unicode.Hanunoo},
+		{s: "Hatran", t: unicode.Hatran},
+		{s: "Hebrew", t: unicode.Hebrew},
+		{s: "Hiragana", t: unicode.Hiragana},
+		{s: "Imperial-Aramaic", t: unicode.Imperial_Aramaic},
+		{s: "Inherited", t: unicode.Inherited},
+		{s: "Inscriptional-Pahlavi", t: unicode.Inscriptional_Pahlavi},
+		{s: "Inscriptional-Parthian", t: unicode.Inscriptional_Parthian},
+		{s: "Javanese", t: unicode.Javanese},
+		{s: "Kaithi", t: unicode.Kaithi},
+		{s: "Kannada", t: unicode.Kannada},
+		{s: "Katakana", t: unicode.Katakana},
+		{s: "Kayah-Li", t: unicode.Kayah_Li},
+		{s: "Kharoshthi", t: unicode.Kharoshthi},
+		{s: "Khitan-Small-Script", t: unicode.Khitan_Small_Script},
+		{s: "Khmer", t: unicode.Khmer},
+		{s: "Khojki", t: unicode.Khojki},
+		{s: "Khudawadi", t: unicode.Khudawadi},
+		{s: "Lao", t: unicode.Lao},
+		{s: "Latin", t: unicode.Latin},
+		{s: "Lepcha", t: unicode.Lepcha},
+		{s: "Limbu", t: unicode.Limbu},
+		{s: "Linear-A", t: unicode.Linear_A},
+		{s: "Linear-B", t: unicode.Linear_B},
+		{s: "Lisu", t: unicode.Lisu},
+		{s: "Lycian", t: unicode.Lycian},
+		{s: "Lydian", t: unicode.Lydian},
+		{s: "Mahajani", t: unicode.Mahajani},
+		{s: "Makasar", t: unicode.Makasar},
+		{s: "Malayalam", t: unicode.Malayalam},
+		{s: "Mandaic", t: unicode.Mandaic},
+		{s: "Manichaean", t: unicode.Manichaean},
+		{s: "Marchen", t: unicode.Marchen},
+		{s: "Masaram-Gondi", t: unicode.Masaram_Gondi},
+		{s: "Medefaidrin", t: unicode.Medefaidrin},
+		{s: "Meetei-Mayek", t: unicode.Meetei_Mayek},
+		{s: "Mende-Kikakui", t: unicode.Mende_Kikakui},
+		{s: "Meroitic-Cursive", t: unicode.Meroitic_Cursive},
+		{s: "Meroitic-Hieroglyphs", t: unicode.Meroitic_Hieroglyphs},
+		{s: "Miao", t: unicode.Miao},
+		{s: "Modi", t: unicode.Modi},
+		{s: "Mongolian", t: unicode.Mongolian},
+		{s: "Mro", t: unicode.Mro},
+		{s: "Multani", t: unicode.Multani},
+		{s: "Myanmar", t: unicode.Myanmar},
+		{s: "Nabataean", t: unicode.Nabataean},
+		{s: "Nandinagari", t: unicode.Nandinagari},
+		{s: "New-Tai-Lue", t: unicode.New_Tai_Lue},
+		{s: "Newa", t: unicode.Newa},
+		{s: "Nko", t: unicode.Nko},
+		{s: "Nushu", t: unicode.Nushu},
+		{s: "Nyiakeng-Puachue-Hmong", t: unicode.Nyiakeng_Puachue_Hmong},
+		{s: "Ogham", t: unicode.Ogham},
+		{s: "Ol-Chiki", t: unicode.Ol_Chiki},
+		{s: "Old-Hungarian", t: unicode.Old_Hungarian},
+		{s: "Old-Italic", t: unicode.Old_Italic},
+		{s: "Old-North-Arabian", t: unicode.Old_North_Arabian},
+		{s: "Old-Permic", t: unicode.Old_Permic},
+		{s: "Old-Persian", t: unicode.Old_Persian},
+		{s: "Old-Sogdian", t: unicode.Old_Sogdian},
+		{s: "Old-South-Arabian", t: unicode.Old_South_Arabian},
+		{s: "Old-Turkic", t: unicode.Old_Turkic},
+		{s: "Oriya", t: unicode.Oriya},
+		{s: "Osage", t: unicode.Osage},
+		{s: "Osmanya", t: unicode.Osmanya},
+		{s: "Pahawh-Hmong", t: unicode.Pahawh_Hmong},
+		{s: "Palmyrene", t: unicode.Palmyrene},
+		{s: "Pau-Cin-Hau", t: unicode.Pau_Cin_Hau},
+		{s: "Phags-Pa", t: unicode.Phags_Pa},
+		{s: "Phoenician", t: unicode.Phoenician},
+		{s: "Psalter-Pahlavi", t: unicode.Psalter_Pahlavi},
+		{s: "Rejang", t: unicode.Rejang},
+		{s: "Runic", t: unicode.Runic},
+		{s: "Samaritan", t: unicode.Samaritan},
+		{s: "Saurashtra", t: unicode.Saurashtra},
+		{s: "Sharada", t: unicode.Sharada},
+		{s: "Shavian", t: unicode.Shavian},
+		{s: "Siddham", t: unicode.Siddham},
+		{s: "SignWriting", t: unicode.SignWriting},
+		{s: "Sinhala", t: unicode.Sinhala},
+		{s: "Sogdian", t: unicode.Sogdian},
+		{s: "Sora-Sompeng", t: unicode.Sora_Sompeng},
+		{s: "Soyombo", t: unicode.Soyombo},
+		{s: "Sundanese", t: unicode.Sundanese},
+		{s: "Syloti-Nagri", t: unicode.Syloti_Nagri},
+		{s: "Syriac", t: unicode.Syriac},
+		{s: "Tagalog", t: unicode.Tagalog},
+		{s: "Tagbanwa", t: unicode.Tagbanwa},
+		{s: "Tai-Le", t: unicode.Tai_Le},
+		{s: "Tai-Tham", t: unicode.Tai_Tham},
+		{s: "Tai-Viet", t: unicode.Tai_Viet},
+		{s: "Takri", t: unicode.Takri},
+		{s: "Tamil", t: unicode.Tamil},
+		{s: "Tangut", t: unicode.Tangut},
+		{s: "Telugu", t: unicode.Telugu},
+		{s: "Thaana", t: unicode.Thaana},
+		{s: "Thai", t: unicode.Thai},
+		{s: "Tibetan", t: unicode.Tibetan},
+		{s: "Tifinagh", t: unicode.Tifinagh},
+		{s: "Tirhuta", t: unicode.Tirhuta},
+		{s: "Ugaritic", t: unicode.Ugaritic},
+		{s: "Vai", t: unicode.Vai},
+		{s: "Wancho", t: unicode.Wancho},
+		{s: "Warang-Citi", t: unicode.Warang_Citi},
+		{s: "Yezidi", t: unicode.Yezidi},
+		{s: "Yi", t: unicode.Yi},
+		{s: "Zanabazar-Square", t: unicode.Zanabazar_Square},
+
+		{s: "Lowercase", f: unicode.IsLower},
+		{s: "Uppercase", f: unicode.IsUpper},
+
+		{s: "ASCII-Hex-Digit", t: unicode.ASCII_Hex_Digit},
+		{s: "Bidi-Control", t: unicode.Bidi_Control},
+		{s: "Dash", t: unicode.Dash},
+		{s: "Deprecated", t: unicode.Deprecated},
+		{s: "Diacritic", t: unicode.Diacritic},
+		{s: "Extender", t: unicode.Extender},
+		{s: "Hex-Digit", t: unicode.Hex_Digit},
+		{s: "Hyphen", t: unicode.Hyphen},
+		{s: "IDS-Binary-Operator", t: unicode.IDS_Binary_Operator},
+		{s: "IDS-Trinary-Operator", t: unicode.IDS_Trinary_Operator},
+		{s: "Ideographic", t: unicode.Ideographic},
+		{s: "Join-Control", t: unicode.Join_Control},
+		{s: "Logical-Order-Exception", t: unicode.Logical_Order_Exception},
+		{s: "Noncharacter-Code-Point", t: unicode.Noncharacter_Code_Point},
+		{s: "Other-Alphabetic", t: unicode.Other_Alphabetic},
+		{s: "Other-Default-Ignorable-Code-Point", t: unicode.Other_Default_Ignorable_Code_Point},
+		{s: "Other-Grapheme-Extend", t: unicode.Other_Grapheme_Extend},
+		{s: "Other-ID-Continue", t: unicode.Other_ID_Continue},
+		{s: "Other-ID-Start", t: unicode.Other_ID_Start},
+		{s: "Other-Lowercase", t: unicode.Other_Lowercase},
+		{s: "Other-Math", t: unicode.Other_Math},
+		{s: "Other-Uppercase", t: unicode.Other_Uppercase},
+		{s: "Pattern-Syntax", t: unicode.Pattern_Syntax},
+		{s: "Pattern-White-Space", t: unicode.Pattern_White_Space},
+		{s: "Prepended-Concatenation-Mark", t: unicode.Prepended_Concatenation_Mark},
+		{s: "Quotation-Mark", t: unicode.Quotation_Mark},
+		{s: "Radical", t: unicode.Radical},
+		{s: "Regional-Indicator", t: unicode.Regional_Indicator},
+		{s: "STerm", t: unicode.STerm},
+		{s: "Sentence-Terminal", t: unicode.Sentence_Terminal},
+		{s: "Soft-Dotted", t: unicode.Soft_Dotted},
+		{s: "Terminal-Punctuation", t: unicode.Terminal_Punctuation},
+		{s: "Unified-Ideograph", t: unicode.Unified_Ideograph},
+		{s: "Variation-Selector", t: unicode.Variation_Selector},
+		{s: "White-Space", t: unicode.White_Space},
 	}
+)
+
+func classify(r rune) string {
+	var a []string
+	for _, v := range Inspectors {
+		if v.f != nil && v.f(r) {
+			a = append(a, v.s)
+		}
+		if v.t != nil && unicode.Is(v.t, r) {
+			a = append(a, v.s)
+		}
+	}
+	return strings.Join(a, " ")
 }
 
 func toEntity(r rune) Entity {
@@ -140,27 +347,32 @@ func toEntity(r rune) Entity {
 	}
 	if r <= unicode.MaxASCII {
 		if entity, ok := ASCII.ControlDetails[uint16(r)]; ok {
+			entity.Detail = classify(r) + " " + entity.Detail
 			return entity
 		}
 	}
 
-	e.Detail = inspect(r)
+	e.Detail = classify(r)
 	return e
 }
 
-type Callback func(uint32, Entity)
+type Callback func(uint32, Entity) error
 
-func Each(table *unicode.RangeTable, callback Callback) {
+func Each(table *unicode.RangeTable, callback Callback) error {
 	for _, v := range table.R16 {
 		for i := v.Lo; i <= v.Hi; i++ {
-			callback(uint32(i), toEntity(rune(i)))
+			if err := callback(uint32(i), toEntity(rune(i))); err != nil {
+				return err
+			}
 		}
 	}
 	for _, v := range table.R32 {
 		for i := v.Lo; i <= v.Hi; i++ {
-			callback(i, toEntity(rune(i)))
+			if err := callback(i, toEntity(rune(i))); err != nil {
+			}
 		}
 	}
+	return nil
 }
 
 type Uint32Slice []uint32
@@ -196,10 +408,13 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 	return &t, nil
 }
 
-func (u Uint32Slice) Each(callback Callback) {
+func (u Uint32Slice) Each(callback Callback) error {
 	for _, v := range u {
-		callback(v, toEntity(rune(v)))
+		if err := callback(v, toEntity(rune(v))); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func toUint32Slice(s []string, base int) (Uint32Slice, error) {
