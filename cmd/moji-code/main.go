@@ -9,7 +9,7 @@ import (
 
 const (
 	Name    = "moji-code"
-	Version = "v2.1"
+	Version = "v2.2"
 	Format  = "%7d %U %-11s %s\n"
 )
 
