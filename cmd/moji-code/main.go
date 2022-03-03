@@ -59,23 +59,23 @@ func init() {
 	flag.BoolVar(&options.verbose, "verbose", 'V', false,
 		"Output with details.\n", nil)
 
-	flag.Bool("control", 'c', false, "Output the Control character in the ASCII.\n", func(_ flag.Getter) error {
+	flag.Bool("control", 'c', false, "Outputs control characters in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Control, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("number", 'n', false, "Output the Number in the ASCII.\n", func(_ flag.Getter) error {
+	flag.Bool("number", 'n', false, "Outputs numerical values in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Number, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("symbol", 's', false, "Output the Symbolic character in the ASCII.\n", func(_ flag.Getter) error {
+	flag.Bool("symbol", 's', false, "Outputs symbolic characters in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Symbol, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("upper-case", 'L', false, "Output the Alphabet upper-case.\n", func(_ flag.Getter) error {
+	flag.Bool("upper-case", 'L', false, "Outputs uppercase alphabetic characters in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Alphabet.Upper, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("lower-case", 'l', false, "Output the Alphabet lower-case.\n", func(_ flag.Getter) error {
+	flag.Bool("lower-case", 'l', false, "Outputs lowercase alphabetic characters in ASCII code.\n", func(_ flag.Getter) error {
 		Each(ASCII.Alphabet.Lower, callback)
 		return flag.ErrHelp
 	})
