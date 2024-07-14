@@ -25,6 +25,21 @@ go install github.com/saihon/moji-code@latest
     .
     ```
 
+* Output with details such as categorizes.
+    ```
+    $ moji-code -V
+    0 U+0000 NULL        Control Common Null
+    1 U+0001 SOH         Control Common Start Of Heading
+    2 U+0002 STX         Control Common End Of Text
+    3 U+0003 ETX         Control Common End Of Transmission
+    4 U+0004 EOT         Control Common End Of Transmission
+    5 U+0005 ENQ         Control Common Enquiry
+    6 U+0006 ACK         Control Common Acknowledgement
+    .
+    .
+    .
+    ```
+
 * Outputs a table corresponding to the character.
     ```
     $ moji-code abc
