@@ -1,7 +1,29 @@
 # moji-code
 
+moji-code is a command line tool that can be displays character code.
+
+# Installation
+
+```
+go install github.com/saihon/moji-code@latest
+```
 
 # Usage
+
+* Outputs ASCII codes.
+    ```
+    $ moji-code
+    0 U+0000 NULL
+    1 U+0001 SOH
+    2 U+0002 STX
+    3 U+0003 ETX
+    4 U+0004 EOT
+    5 U+0005 ENQ
+    6 U+0006 ACK
+    .
+    .
+    .
+    ```
 
 * Outputs a table corresponding to the character.
     ```
@@ -21,13 +43,13 @@
 
 * Outputs a table corresponding to the hexadecimal number.
     ```
-    $ moji-code -x 0061 0062 0063
+    $ moji-code -x 0061 62 63
     97 U+0061 a
     98 U+0062 b
     99 U+0063 c
     ```
 
-* Outputs a correspondence table for the specified range.
+* Outputs a corresponding to the specified range.
     ```
     $ moji-code -r a c
     97 U+0061 a

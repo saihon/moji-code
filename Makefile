@@ -4,7 +4,7 @@ PREFIX = /usr/local/bin
 LDFLAGS =-w -s
 
 $(NAME): clean
-	@go build -ldflags="$(LDFLAGS)" -o $(NAME) ./cmd/$(NAME)/*.go
+	@go build -ldflags="$(LDFLAGS)" -o $(NAME) ./*.go
 
 .PHONY: clean install uninstall
 

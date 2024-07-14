@@ -48,34 +48,33 @@ func init() {
 		})
 
 	flag.BoolVar(&options.ranges, "range", 'r', false,
-		"Specify the range as a decimal,\nhexadecimal or character.\n", nil)
+		"Specify the range to display in decimal,\nhexadecimal, or character.\n", nil)
 
 	flag.BoolVar(&options.decimal, "decimal", 'd', false,
-		"The specified value is set as a decimal.\n", nil)
+		"Displays the character code\ncorresponding to the specified decimal number.\n", nil)
 
 	flag.BoolVar(&options.hexadecimal, "hexadecimal", 'x', false,
-		"The specified value is set as a hexadecimal.\n", nil)
+		"Displays the character code\ncorresponding to the specified hexadecimal.\n", nil)
 
-	flag.BoolVar(&options.verbose, "verbose", 'V', false,
-		"Outputs details such as categories.\n", nil)
+	flag.BoolVar(&options.verbose, "verbose", 'V', false, "Output with categories.\n", nil)
 
-	flag.Bool("control", 'c', false, "Outputs control characters in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("control", 'c', false, "Output control characters.\n", func(_ flag.Getter) error {
 		Each(ASCII.Control, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("number", 'n', false, "Outputs numerical values in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("number", 'n', false, "Output numerical values.\n", func(_ flag.Getter) error {
 		Each(ASCII.Number, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("symbol", 's', false, "Outputs symbolic characters in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("symbol", 's', false, "Output symbolic characters.\n", func(_ flag.Getter) error {
 		Each(ASCII.Symbol, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("upper-case", 'L', false, "Outputs uppercase alphabetic characters in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("upper-case", 'L', false, "Output uppercase alphabet characters.\n", func(_ flag.Getter) error {
 		Each(ASCII.Alphabet.Upper, callback)
 		return flag.ErrHelp
 	})
-	flag.Bool("lower-case", 'l', false, "Outputs lowercase alphabetic characters in ASCII code.\n", func(_ flag.Getter) error {
+	flag.Bool("lower-case", 'l', false, "Output lowercase alphabet characters.\n", func(_ flag.Getter) error {
 		Each(ASCII.Alphabet.Lower, callback)
 		return flag.ErrHelp
 	})

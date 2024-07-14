@@ -369,6 +369,7 @@ func Each(table *unicode.RangeTable, callback Callback) error {
 	for _, v := range table.R32 {
 		for i := v.Lo; i <= v.Hi; i++ {
 			if err := callback(i, toEntity(rune(i))); err != nil {
+				return err
 			}
 		}
 	}
@@ -383,7 +384,7 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 	for i, j := 0, 1; i <= l; i, j = i+2, j+2 {
 		if j > l {
 			if u[i] > unicode.MaxRune {
-				return nil, errors.New("Exceeded maximum valid Unicode code point")
+				return nil, errors.New("exceeded maximum valid Unicode code point")
 			}
 			if u[i] <= MaxR16 {
 				r16 := unicode.Range16{Lo: uint16(u[i]), Hi: uint16(u[i]), Stride: 1}
@@ -396,7 +397,7 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 		}
 
 		if u[i] > unicode.MaxRune || u[j] > unicode.MaxRune {
-			return nil, errors.New("Exceeded maximum valid Unicode code point")
+			return nil, errors.New("exceeded maximum valid Unicode code point")
 		}
 
 		if u[i] <= MaxR16 && u[j] <= MaxR16 {
@@ -410,7 +411,7 @@ func (u Uint32Slice) ToRangeTable() (*unicode.RangeTable, error) {
 			continue
 		}
 
-		return nil, errors.New("ToRnageTable: Failed to create a range table")
+		return nil, errors.New("ToRangeTable: Failed to create a range table")
 	}
 	return &t, nil
 }
@@ -435,7 +436,7 @@ func toUint32Slice(s []string, base int) (Uint32Slice, error) {
 		return a, nil
 	}
 
-	a := make([]uint32, len(s), len(s))
+	a := make([]uint32, len(s))
 	for i, v := range s {
 		u64, err := strconv.ParseUint(v, base, 32)
 		if err != nil {
